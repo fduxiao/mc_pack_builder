@@ -47,7 +47,7 @@ class Field(NaturalModel):
             return self
         if not isinstance(instance, DictModel):
             raise TypeError("Only allowed to use on DictModel")
-        return instance.dict.get(self.name, self.default)
+        return instance.get(self.name, self.default)
 
     def check_value(self, value) -> bool:
         return True
@@ -57,7 +57,7 @@ class Field(NaturalModel):
             raise TypeError("Only allowed to use on DictModel")
         if not self.check_value(value):
             raise ValueError(f"{value} is not allowed for {type(self)}")
-        instance.dict[self.name] = value
+        instance.set(self.name, value)
 
 
 class IntField(Field):
@@ -75,19 +75,32 @@ class DictModel(NaturalModel):
         self.dict = data
         self.name = name
 
+    def parse_path(self, path: str):
+        path = path.split('/')
+        parent = self.dict
+        while True:
+            if len(path) == 1:
+                return parent, path[0]
+            prefix = path.pop(0)
+            if prefix not in parent:
+                parent[prefix] = dict()
+            parent = parent[prefix]
+
     def __getitem__(self, item):
         return self.dict[item]
 
     def get(self, key, default=None):
-        if key not in self.dict:
-            self.dict[key] = default
-        return self.dict[key]
+        parent, key = self.parse_path(key)
+        if key not in parent:
+            parent[key] = default
+        return parent[key]
 
     def __setitem__(self, key, value):
         self.dict[key] = value
 
     def set(self, key, value):
-        self.dict[key] = value
+        parent, key = self.parse_path(key)
+        parent[key] = value
         return value
 
     def dump(self):

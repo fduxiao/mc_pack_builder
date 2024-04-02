@@ -1,7 +1,7 @@
 import os
 import tempfile
 import unittest
-from mc_pack_builder import Pack, DictFileSystem, OSFileSystem, Path
+from mc_pack_builder import Pack, DictFileSystem, DataPack, Path
 
 
 class TestPack(unittest.TestCase):
@@ -32,6 +32,12 @@ class TestPack(unittest.TestCase):
             self.assertTrue((path / 'data' / 'dir').exists())
             with open(path / 'data' / 't' / 'b.txt') as file:
                 self.assertEqual(file.read(), 'some file')
+
+    def test_data_pack(self):
+        data_pack = DataPack("desc", 26)
+        fs = DictFileSystem()
+        data_pack.write_to(fs=fs)
+        self.assertEqual(fs.dict, {'pack.mcmeta': '{"pack": {"description": "desc", "pack_format": 26}}'})
 
 
 if __name__ == '__main__':

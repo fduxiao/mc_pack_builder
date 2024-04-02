@@ -9,20 +9,26 @@ Though we finally want to dump everything to files, sometimes it is convenient t
 them to a :py:class:`dict` in order to do some tests. Thus, I break a pack into the following
 3 parts:
 
-1. A filesystem describer with `mkdir` method, and `open` method.
+1. A filesystem describer with `mkdir` method, and `open` method, together with some other info like json indent.
 2. A tree object that can `dump` the data into a file system.
 3. A Pack class wrapping a tree.
 """
+import json
 from contextlib import contextmanager
 import io
 from pathlib import Path
 from typing import IO
+from .natural_model import NaturalModel
 
 
 class FileSystem:
     """
     abstract file system class
     """
+
+    json_indent = 4
+    json_ensure_ascii = False
+
     def mkdir(self, path: Path) -> "FileSystem":
         """
         mkdir
@@ -62,6 +68,9 @@ class DictFileSystem(FileSystem):
     """
     For testing, one may want to save all data to a file system
     """
+    json_indent = None
+    json_ensure_ascii = False
+
     def __init__(self, fs=None):
         if fs is None:
             fs = dict()
@@ -141,11 +150,13 @@ class Leaf(FSTree):
     dummy class annotating a leaf of :py:class:`FSTree`
     """
     mode = 'w'
+    fs = None
 
     def dump_to(self, file: IO):
         """
         The general `dump` behavior of a file is to open it, dump to the IO object, and close it.
-        So we only have to define the `dump to file` function
+        So we only have to define the `dump to file` function. Besides, `self.fs` is set to the
+        :py:class:`FileSystem` object passed to `dump`
 
         :param file: the IO object opened by :py:meth:`Leaf.dump`
         :return:
@@ -154,6 +165,7 @@ class Leaf(FSTree):
 
     def dump(self, rel_path: Path, fs: FileSystem):
         with fs.open(rel_path, self.mode) as file:
+            self.fs = fs
             self.dump_to(file)
 
 
@@ -173,6 +185,15 @@ class Text(Leaf):
         file.write(self.text)
 
 
+class Json(Leaf):
+    def __init__(self, data: NaturalModel):
+        self.data = data
+
+    def dump_to(self, file: IO):
+        json.dump(self.data.dump(), file, indent=self.fs.json_indent,
+                  ensure_ascii=self.fs.json_ensure_ascii)
+
+
 class Dir(Branch):
     """
     a helper to gather different leaves
@@ -190,6 +211,10 @@ class Dir(Branch):
         text = Text()
         self.add_node(path, text)
         return text
+
+    def add_json(self, path: str | Path, data: NaturalModel):
+        self.add_node(path, Json(data))
+        return data
 
 
 class Pack(Dir):
