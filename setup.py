@@ -26,7 +26,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    packages=find_packages(),
+    packages=find_packages(include=["mc_pack_builder"]),
     python_requires=">=3.7, <4",
     install_requires=[""],
     project_urls={
