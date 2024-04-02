@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 from mc_pack_builder import Pack, DictFileSystem, OSFileSystem, Path
@@ -18,6 +19,9 @@ class TestPack(unittest.TestCase):
 
         self.assertDictEqual(fs.dict, {'aaa': {}, 'a.txt': 'some text', 'data': {'t': {'b.txt': 'some file'}, 'dir': {}}})
 
+        # I don't want to always test the following to save my ssd unless given a flag
+        if os.getenv('TEST_FOR_OSFS', None) is None:
+            return
         with tempfile.TemporaryDirectory() as tempdir:
             pack.write_to(tempdir)
             path = Path(tempdir)

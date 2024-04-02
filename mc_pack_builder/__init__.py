@@ -10,3 +10,4 @@ designs on the high level. So I still invent the wheel again.
 
 
 from .pack import *
+from .natural_model import *
