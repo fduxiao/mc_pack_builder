@@ -1,5 +1,5 @@
 import unittest
-from mc_pack_builder import DictModel, Field
+from mc_pack_builder import DictModel, Field, nbt
 
 
 class TestNaturalModel(unittest.TestCase):
@@ -31,6 +31,16 @@ class TestNaturalModel(unittest.TestCase):
         b.a = a
         self.assertEqual(b.dump(), {'aa': {'a': 1, 'c': 'new', 'name': 'abc'}, 'b': 1})
         self.assertEqual(b.c, 1)
+
+    def test_to_nbt(self):
+        class A(DictModel):
+            a = Field(default=2)
+            b = Field(name='name')
+
+        a = A()
+        a.a = nbt.String("aaa")
+        a.b = nbt.Byte(3)
+        self.assertEqual(a.to_nbt(), '{a: "aaa", name: 3b}')
 
 
 if __name__ == '__main__':

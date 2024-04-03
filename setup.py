@@ -28,7 +28,7 @@ setup(
     ],
     packages=find_packages(include=["mc_pack_builder"]),
     python_requires=">=3.7, <4",
-    install_requires=[""],
+    install_requires=["nbtlib"],
     project_urls={
         "Bug Reports": "https://github.com/fduxiao/mc_pack_builder/issues",
         "Source": "https://github.com/fduxiao/mc_pack_builder",

@@ -17,6 +17,9 @@ which are further compatible with json or nbt. In general, a natural model is a 
 dump/load, while some fields with __set__ and __get__ provided to access those data easily. Again,
 a natural model may also be a field of another dict, so it's quite natural to build it from the reference.
 """
+import json
+from nbtlib import serialize_tag
+import nbtlib.tag as nbt  # included for later usage, e.g., one may want to write model.field = nbt.Byte(3)
 
 
 class NaturalModel:
@@ -24,10 +27,52 @@ class NaturalModel:
     The base class of load and dump
     """
     def load(self, obj):
+        """
+        load from python object
+
+        :param obj:
+        :return:
+        """
         pass
 
     def dump(self):
+        """
+        dump to python object
+        :return:
+        """
         pass
+
+    def to_json(self, indent=0, ensure_ascii=False):
+        """
+        dump to json string
+
+        :param indent:
+        :param ensure_ascii:
+        :return:
+        """
+        data = self.dump()
+        return json.dumps(data, indent=indent, ensure_ascii=ensure_ascii)
+
+    def dump_nbt(self):
+        """
+        dump to nbt object
+
+        :return:
+        """
+        data = self.dump()
+        if isinstance(data, dict):
+            return nbt.Compound(data)
+        if isinstance(data, nbt.Base):
+            return data
+        raise NotImplementedError(type(data))
+
+    def to_nbt(self):
+        """
+        dump to nbt string
+
+        :return:
+        """
+        return serialize_tag(self.dump_nbt())
 
 
 class Field(NaturalModel):
