@@ -26,7 +26,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    packages=find_packages(include=["mc_pack_builder"]),
+    packages=find_packages(exclude=["examples", "tests"]),
     python_requires=">=3.7, <4",
     install_requires=["nbtlib"],
     project_urls={

@@ -17,9 +17,33 @@ which are further compatible with json or nbt. In general, a natural model is a 
 dump/load, while some fields with __set__ and __get__ provided to access those data easily. Again,
 a natural model may also be a field of another dict, so it's quite natural to build it from the reference.
 """
+import copy
 import json
 from nbtlib import serialize_tag
 import nbtlib.tag as nbt  # included for later usage, e.g., one may want to write model.field = nbt.Byte(3)
+
+
+def py2nbt(obj) -> nbt.Base:
+    if isinstance(obj, nbt.Base):
+        return obj
+    if isinstance(obj, int):
+        return nbt.Int(obj)
+    if isinstance(obj, str):
+        return nbt.String(obj)
+    if isinstance(obj, bool):
+        return nbt.Byte(int(obj))
+    if isinstance(obj, list):
+        result = []
+        for each in obj:
+            result.append(py2nbt(each))
+        return nbt.List(result)
+
+    if isinstance(obj, dict):
+        result = nbt.Compound()
+        for key, value in obj.items():
+            result[key] = py2nbt(value)
+        return result
+    raise NotImplementedError(type(obj))
 
 
 class NaturalModel:
@@ -60,11 +84,7 @@ class NaturalModel:
         :return:
         """
         data = self.dump()
-        if isinstance(data, dict):
-            return nbt.Compound(data)
-        if isinstance(data, nbt.Base):
-            return data
-        raise NotImplementedError(type(data))
+        return py2nbt(data)
 
     def to_nbt(self):
         """
@@ -138,7 +158,7 @@ class DictModel(NaturalModel):
     def get(self, key, default=None):
         parent, key = self.parse_path(key)
         if key not in parent:
-            parent[key] = default
+            parent[key] = copy.deepcopy(default)
         return parent[key]
 
     def __setitem__(self, key, value):

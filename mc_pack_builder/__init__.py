@@ -12,3 +12,4 @@ designs on the high level. So I still invent the wheel again.
 from .pack import *
 from .natural_model import *
 from .data_pack import *
+from .minecraft import *
