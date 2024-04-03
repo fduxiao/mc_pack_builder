@@ -17,7 +17,7 @@ import json
 from contextlib import contextmanager
 import io
 from pathlib import Path
-from typing import IO
+from typing import IO, Callable, TypeVar
 from .natural_model import NaturalModel
 
 
@@ -116,6 +116,9 @@ class FSTree:
         pass
 
 
+T = TypeVar("T")
+
+
 class Branch(FSTree):
     """
     for a branch
@@ -134,6 +137,25 @@ class Branch(FSTree):
         """
         path = Path(path)
         self.nodes[path] = node
+        return node
+
+    def ensure_node(self, path: str | Path, node_class: Callable[[], T] = None) -> T:
+        """
+        Usually, we don't want to repeatedly add nodes with the same path.
+        This method is provided to ensure a node is given
+
+        :param path:
+        :param node_class: a function returns a node
+        :return:
+        """
+        path = Path(path)
+        node = self.nodes.get(path, None)
+        if node is not None:
+            return node
+        if node_class is None:
+            node_class = Dir
+        node = node_class()
+        self.add_node(path, node)
         return node
 
     def dump(self, rel_path: Path, fs: FileSystem):
@@ -202,18 +224,14 @@ class Dir(Branch):
     def __init__(self):
         super().__init__()
 
-    def dir(self, path: str | Path):
-        new_dir = Dir()
-        self.add_node(path, new_dir)
-        return new_dir
+    def dir(self, path: str | Path) -> "Dir":
+        return self.ensure_node(path, Dir)
 
-    def text(self, path: str | Path):
-        text = Text()
-        self.add_node(path, text)
-        return text
+    def text(self, path: str | Path) -> Text:
+        return self.ensure_node(path, Text)
 
     def add_json(self, path: str | Path, data: NaturalModel):
-        self.add_node(path, Json(data))
+        self.ensure_node(path, lambda: Json(data))
         return data
 
 

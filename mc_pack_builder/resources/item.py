@@ -31,7 +31,7 @@ class Item(Resource):
         :return:
         """
         nbt.Compound({
-            "id": self.get_resource_id(),
+            "id": self.resource_location(),
             "count": self.count,
             "tags": self.dump_nbt(),
             **kwargs

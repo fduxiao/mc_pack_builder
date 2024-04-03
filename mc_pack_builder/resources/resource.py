@@ -16,11 +16,11 @@ class Resource(DictModel):
         self.resource_id = resource_id
         self.namespace = namespace
 
-    def get_resource_id(self):
+    def resource_location(self):
         return f"{self.namespace}:{self.resource_id}"
 
     def as_str(self):
-        return self.get_resource_id() + self.to_nbt()
+        return self.resource_location() + self.to_nbt()
 
     def __str__(self):
         return self.as_str()

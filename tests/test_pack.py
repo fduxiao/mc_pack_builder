@@ -37,7 +37,10 @@ class TestPack(unittest.TestCase):
         data_pack = DataPack("desc", 26)
         fs = DictFileSystem()
         data_pack.write_to(fs=fs)
-        self.assertEqual(fs.dict, {'pack.mcmeta': '{"pack": {"description": "desc", "pack_format": 26}}'})
+        self.assertDictEqual(fs.dict, {
+            'pack.mcmeta': '{"pack": {"description": "desc", "pack_format": 26}}',
+            'data': {},
+        })
 
 
 if __name__ == '__main__':
