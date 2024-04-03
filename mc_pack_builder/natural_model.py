@@ -79,9 +79,14 @@ class Field(NaturalModel):
     """
     To access model data more easily
     """
-    def __init__(self, name=None, default=None):
+    def __init__(self, name=None, default=None, cast=None):
         self.name = name
         self.default = default
+        if cast is not None:
+            self.cast = cast
+
+    def cast(self, x):
+        return x
 
     def __set_name__(self, owner, name):
         if self.name is None:
@@ -94,20 +99,16 @@ class Field(NaturalModel):
             raise TypeError("Only allowed to use on DictModel")
         return instance.get(self.name, self.default)
 
-    def check_value(self, value) -> bool:
-        return True
-
     def __set__(self, instance, value):
+        value = self.cast(value)
         if not isinstance(instance, DictModel):
             raise TypeError("Only allowed to use on DictModel")
-        if not self.check_value(value):
-            raise ValueError(f"{value} is not allowed for {type(self)}")
         instance.set(self.name, value)
 
 
 class IntField(Field):
-    def check_value(self, value) -> bool:
-        return isinstance(value, int)
+    def cast(self, x):
+        return int(x)
 
 
 class DictModel(NaturalModel):
