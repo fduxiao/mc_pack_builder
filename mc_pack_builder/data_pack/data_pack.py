@@ -2,6 +2,7 @@ from ..pack import Pack, Dir
 from ..natural_model import DictModel, Field
 from ..namespace import Namespace
 from .tags import Tags
+from .recipes import Recipes
 
 
 class MCMeta(DictModel):
@@ -22,6 +23,10 @@ class DatapackNamespace(Dir):
     @property
     def tags(self):
         return self.ensure_node("tags", lambda: Tags(self.namespace.name))
+
+    @property
+    def recipes(self):
+        return self.ensure_node("recipes", Recipes)
 
 
 class DataPack(Pack):

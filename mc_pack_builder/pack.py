@@ -18,7 +18,7 @@ from contextlib import contextmanager
 import io
 from pathlib import Path
 from typing import IO, Callable, TypeVar
-from .natural_model import NaturalModel
+from .natural_model import NaturalModel, DictModel
 
 
 class FileSystem:
@@ -230,7 +230,9 @@ class Dir(Branch):
     def text(self, path: str | Path) -> Text:
         return self.ensure_node(path, Text)
 
-    def add_json(self, path: str | Path, data: NaturalModel):
+    def add_json(self, path: str | Path, data: T) -> T:
+        if isinstance(data, dict):
+            data = DictModel(data=data)
         self.ensure_node(path, lambda: Json(data))
         return data
 
