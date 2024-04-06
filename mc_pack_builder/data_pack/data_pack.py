@@ -3,11 +3,7 @@ from ..natural_model import DictModel, Field
 from ..namespace import Namespace
 from .tags import Tags
 from .recipes import Recipes
-
-
-class MCMeta(DictModel):
-    desc = Field("pack/description")
-    format = Field("pack/pack_format")
+from .functions import Functions
 
 
 class DatapackNamespace(Dir):
@@ -27,6 +23,15 @@ class DatapackNamespace(Dir):
     @property
     def recipes(self):
         return self.ensure_node("recipes", Recipes)
+
+    @property
+    def functions(self):
+        return self.ensure_node("functions", lambda: Functions(self.namespace.name))
+
+
+class MCMeta(DictModel):
+    desc = Field("pack/description")
+    format = Field("pack/pack_format")
 
 
 class DataPack(Pack):

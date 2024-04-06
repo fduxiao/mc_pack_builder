@@ -9,7 +9,6 @@ you may want to use item.resource_location(), item.as_str(), item.item_nbt for d
 Thus, a part of a command is a callable returning a string, i.e., a class with __str__ method
 """
 from .natural_model import serialize_tag, py2nbt
-from nbtlib.tag import Base
 
 
 class Command:
@@ -103,4 +102,10 @@ def at(var):
     return Target(var)
 
 
+def at_s(**kwargs):
+    return at('s')(**kwargs)
+
+
 give = Command('give')
+say = Command('say')
+tell = Command('tell')
