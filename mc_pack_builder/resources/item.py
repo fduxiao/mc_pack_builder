@@ -9,7 +9,7 @@ from .resource import Resource
 
 
 class Item(Resource):
-    _count: 1
+    _count: int = 1
 
     @property
     def count(self):
@@ -18,26 +18,26 @@ class Item(Resource):
 
         :return:
         """
-        return self.count
+        return self._count
 
     @count.setter
     def count(self, value):
         self._count = value
 
-    def item_nbt(self, **kwargs):
+    def item_nbt(self, with_count=True, **kwargs):
         """
         used when putting in a tag
 
         :return:
         """
-        nbt.Compound({
-            "id": self.resource_location(),
-            "count": self.count,
+        data = {
+            "id": nbt.String(self.resource_location()),
             "tags": self.dump_nbt(),
             **kwargs
-        })
-
-        return self
+        }
+        if with_count:
+            data['count'] = nbt.Int(self.count)
+        return nbt.Compound(data)
 
     enchantments: list = Field("Enchantments", default=[])
 

@@ -13,3 +13,4 @@ from .pack import *
 from .natural_model import *
 from .data_pack import *
 from .minecraft import *
+from . import command
