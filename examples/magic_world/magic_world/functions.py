@@ -1,5 +1,5 @@
 from mc_pack_builder import command as cmd
-from pack import magic
+from .pack import magic
 
 functions = magic.functions
 
