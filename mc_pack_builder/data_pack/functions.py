@@ -24,12 +24,16 @@ class Functions(Dir):
     def dir(self, path: str | Path) -> "Functions":
         return self.ensure_node(path, lambda: Functions(self.namespace, self.prefix / path))
 
-    def new(self, path: str | Path):
-        func = Function(resource_id=f'{self.prefix / path}', namespace=self.namespace)
+    def new(self, path: str | Path, before_body=None):
+        func = Function(
+            resource_id=f'{self.prefix / path}',
+            namespace=self.namespace,
+            before_body=before_body
+        )
         self.ensure_node(f'{path}.mcfunction', lambda: FunctionLeaf(func))
         return func
 
-    def make(self, force_str=True):
+    def make(self, force_str=True, before_body=None):
         """
         used when make a function from generator
         @functions.define()
@@ -38,10 +42,11 @@ class Functions(Dir):
             yield say("say2")
 
         :param force_str: force to apply str to each line
+        :param before_body: whether to add extra guarding commands
         :return:
         """
         def decorator(func):
-            result = self.new(func.__name__)
+            result = self.new(func.__name__, before_body=before_body)
             body = func()
             if force_str:
                 body = map(str, body)
@@ -50,3 +55,30 @@ class Functions(Dir):
             return result
 
         return decorator
+
+
+class LevelGuard(Functions):
+    """
+    The function adder with guard
+    """
+    def __init__(self, namespace="", prefix: Path | str = "", objective=None):
+        super().__init__(namespace, prefix)
+
+        self.objective = objective
+
+    def dir(self, path: str | Path) -> "LevelGuard":
+        return self.ensure_node(path, lambda: LevelGuard(self.namespace, self.prefix / path, self.objective))
+
+    def get_guard_cmd(self, min_score):
+        return [
+            f'execute if entity @s[type=player] run scoreboard players add @s {self.objective} 0',
+            'execute if entity @s[type=player, scores={%s}] run return fail' % f'{self.objective}=..{min_score-1}'
+        ]
+
+    def guarded_new(self, path: str | Path, min_score):
+        func = self.new(path)
+        func.before_body = self.get_guard_cmd(min_score)
+        return self
+
+    def guarded_make(self, min_score, force_str=True):
+        return self.make(force_str, before_body=self.get_guard_cmd(min_score))

@@ -4,11 +4,11 @@ from mc_pack_builder import command as cmd
 # You can directly use it, or you can make some further
 # modification. If you don't like the idea of export an
 # instance, you can always make a class instead.
-from magic_world import data_pack, magic
+from magic_world import data_pack, magic, admin_guard
 
 
 # some modifications if you want
-@magic.functions.make()
+@admin_guard.guarded_make(3)
 def f3():
     yield cmd.say("I am f3.")
 

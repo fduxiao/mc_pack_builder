@@ -152,3 +152,60 @@ class ScoreBoard:
 
 def scoreboard(objective):
     return ScoreBoard(objective)
+
+
+class Execute:
+    def __init__(self, force_str=True):
+        self.force_str = force_str
+        self.modifications = dict()
+        self.condition_type = None
+        self.condition_expr = None
+        self.cmd_run = None
+
+    def modify(self, **kwargs):
+        if self.force_str:
+            for k, v in self.modifications.items():
+                self.modifications[k] = str(v)
+        else:
+            self.modifications.update(kwargs)
+        return self
+
+    def as_(self, target):
+        if self.force_str:
+            target = str(target)
+        self.modifications['as'] = target
+        return self
+
+    def at(self, target):
+        return self.modify(at=target)
+
+    def condition(self, condition_type, condition):
+        self.condition_type = condition_type
+        if self.force_str:
+            condition = str(condition)
+        self.condition_expr = condition
+        return self
+
+    def if_entity(self, condition):
+        self.condition('if entity', condition)
+        return self
+
+    def run(self, cmd):
+        if self.force_str:
+            cmd = str(cmd)
+        self.cmd_run = cmd
+        return self
+
+    def __str__(self):
+        modifications = " ".join(map(lambda k, v: f'{k} {v}', self.modifications.items()))
+        cmd = 'execute'
+        if modifications != "":
+            cmd += " " + modifications
+        if self.condition_type:
+            cmd += f" {self.condition_type} {self.condition_expr}"
+        if self.cmd_run:
+            cmd += f" run {self.cmd_run}"
+        return cmd
+
+
+execute = Execute

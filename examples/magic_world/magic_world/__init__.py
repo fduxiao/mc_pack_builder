@@ -1,4 +1,4 @@
-from .pack import data_pack, magic
+from .pack import *
 from . import functions
 from . import books
 from . import players
