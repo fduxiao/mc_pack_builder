@@ -23,6 +23,13 @@ class Function(Resource):
         self._body = body
         return self
 
+    def extend(self, *cmds):
+        if isinstance(self._body, list):
+            self._body.extend(cmds)
+        else:
+            self._body = (*self._body, *cmds)
+        return self
+
     def __call__(self, arg=None):
         """This should give a /function call in minecraft"""
         func_call = f"function {self.resource_location()}"

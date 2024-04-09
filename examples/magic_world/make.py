@@ -13,5 +13,8 @@ def f3():
     yield cmd.say("I am f3.")
 
 
+magic.on_load(cmd.tell("@a", "on load"))
+
+
 # save to file
 data_pack.write_to('build/magic')
