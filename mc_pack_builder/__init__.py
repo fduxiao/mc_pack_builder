@@ -12,5 +12,8 @@ designs on the high level. So I still invent the wheel again.
 from .pack import *
 from .natural_model import *
 from .data_pack import *
-from .minecraft import *
-from . import command
+from .command import *
+from .resources import *
+from .json_text import *
+
+from .minecraft import Minecraft

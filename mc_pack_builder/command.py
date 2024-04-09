@@ -109,3 +109,4 @@ def at_s(**kwargs):
 give = Command('give')
 say = Command('say')
 tell = Command('tell')
+tellraw = Command('tellraw')

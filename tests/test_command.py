@@ -1,5 +1,5 @@
 import unittest
-from mc_pack_builder import Minecraft
+from mc_pack_builder import Minecraft, Text
 from mc_pack_builder import command as cmd
 
 at = cmd.at
@@ -22,6 +22,15 @@ class TestCommand(unittest.TestCase):
         self.assertEqual(str(give),
                          'give @s minecraft:diamond_sword'
                          '{Unbreakable: 1, Enchantments: [{id: "minecraft:sharpness", lvl: 10}]} 2')
+
+        book = mc.written_book("title", "author", pages=[
+            "some_text" + Text(" with '")
+        ])
+        give = cmd.give(at('s'), book)
+        self.assertEqual(str(give),
+                         'give @s minecraft:written_book'
+                         '{title: "title", author: "author", pages: [\'[{"text": "some_text"}, '
+                         '{"text": " with \\\'"}]\']}')
 
 
 if __name__ == '__main__':

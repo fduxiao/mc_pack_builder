@@ -1,4 +1,5 @@
 from ..resources import Resource
+from ..natural_model import NaturalModel
 
 
 class Function(Resource):
@@ -17,5 +18,16 @@ class Function(Resource):
     def body(self, body=None):
         if body is None:
             return self._body
+        if not hasattr(body, '__iter__'):
+            body = [body]
         self._body = body
         return self
+
+    def __call__(self, arg=None):
+        """This should give a /function call in minecraft"""
+        func_call = f"function {self.resource_location()}"
+        if isinstance(arg, NaturalModel):
+            arg = arg.to_nbt()
+        if arg is not None:
+            func_call = f'{func_call} {arg}'
+        return func_call
