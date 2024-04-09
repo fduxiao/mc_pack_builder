@@ -1,5 +1,5 @@
 from mc_pack_builder import DataPack, Minecraft
-
+from . import config
 
 # the Minecraft namespace
 mc = Minecraft()
@@ -8,4 +8,4 @@ mc = Minecraft()
 data_pack = DataPack("some convenient magic", 26)
 # the datapack namespace
 magic = data_pack.namespace("magic")
-admin_guard = magic.level_guard('admin_guard', 10)
+admin_guard = magic.level_guard(config.ADMIN_SCOREBOARD_NAME, config.ADMIN_LEVEL)

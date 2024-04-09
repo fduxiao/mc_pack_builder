@@ -64,7 +64,7 @@ class DatapackNamespace(Dir):
             self._on_load = self.functions.new('on_load')
             if self.datapack is not None:
                 self.datapack.on_load(self._on_load)
-        self._on_load.extend(*map(str, cmds))
+        self._on_load.extend(*cmds)
         return self
 
     def on_tick(self, *cmds):
@@ -72,7 +72,7 @@ class DatapackNamespace(Dir):
             self._on_tick = self.functions.new('on_tick')
             if self.datapack is not None:
                 self.datapack.on_tick(self._on_tick)
-        self._on_tick.extend(*map(str, cmds))
+        self._on_tick.extend(*cmds)
         return self
 
 

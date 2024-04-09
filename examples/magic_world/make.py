@@ -4,7 +4,11 @@ from mc_pack_builder import command as cmd
 # You can directly use it, or you can make some further
 # modification. If you don't like the idea of export an
 # instance, you can always make a class instead.
-from magic_world import data_pack, magic, admin_guard
+from magic_world import data_pack, magic, admin_guard, config, weapons
+
+
+# change some config if you want
+config.ADMIN_LEVEL.data = 9
 
 
 # some modifications if you want
@@ -14,7 +18,9 @@ def f3():
 
 
 magic.on_load(cmd.tell("@a", "on load"))
+weapons.excalibur_enchantments[0].lvl(11)
 
 
-# save to file
-data_pack.write_to('build/magic')
+if __name__ == '__main__':
+    # save to file
+    data_pack.write_to('build/magic')

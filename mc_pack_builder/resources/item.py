@@ -73,8 +73,7 @@ class Item(Resource):
     enchantments: list = Field("Enchantments", default=[])
 
     def enchant(self, *enchantments: Enchantment):
-        for enc in enchantments:
-            self.enchantments.append(enc.dump())
+        self.enchantments.extend(enchantments)
         return self
 
     stored_enchantments: list = Field("StoredEnchantments", default=[])

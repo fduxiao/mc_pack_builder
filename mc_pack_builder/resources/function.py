@@ -13,9 +13,15 @@ class Function(Resource):
             before_body = []
         self.before_body = before_body
 
+    def force_str(self):
+        self._body = map(str, self._body)
+        self.before_body = map(str, self.before_body)
+        return self
+
     def gen_lines(self):
         yield f'# function {self.name}'
-        yield from self.before_body
+        for line in self.before_body:
+            yield str(line)
         for line in self._body:
             yield str(line)
 

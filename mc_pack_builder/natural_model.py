@@ -32,6 +32,13 @@ def py2nbt(obj) -> nbt.Base:
         return nbt.String(obj)
     if isinstance(obj, bool):
         return nbt.Byte(int(obj))
+
+    if isinstance(obj, Box):
+        return py2nbt(obj.data)
+
+    if isinstance(obj, NaturalModel):
+        return py2nbt(obj.dump())
+
     if isinstance(obj, list):
         result = []
         for each in obj:
@@ -44,6 +51,43 @@ def py2nbt(obj) -> nbt.Base:
             result[key] = py2nbt(value)
         return result
     raise NotImplementedError(type(obj))
+
+
+class Box:
+    """
+    mimic a pointer in python.
+    This can be used to make a lazy string for the commands and configuration
+    """
+    def __init__(self, data=None, get_cast=lambda x: x, set_cast=lambda x: x):
+        self._data = data
+        self._get_cast = get_cast
+        self._set_cast = set_cast
+
+    @property
+    def data(self):
+        return self._get_cast(self._data)
+
+    @data.setter
+    def data(self, value):
+        self._data = self._set_cast(value)
+
+    def __call__(self, *args, **kwargs):
+        return self.data(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.data)
+
+    def __add__(self, other):
+        return Box(self.data + other)
+
+    def __radd__(self, other):
+        return Box(other + self.data)
+
+    def __sub__(self, other):
+        return Box(self.data - other)
+
+    def __rsub__(self, other):
+        return Box(other - self.data)
 
 
 class NaturalModel:

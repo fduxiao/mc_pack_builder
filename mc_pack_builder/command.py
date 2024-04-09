@@ -15,24 +15,18 @@ class Command:
     """
     A command just collects a lot of parts, which can be mapped to string
     """
-    def __init__(self, *parts, force_str=True):
-        if force_str:
-            parts = map(str, parts)
-        self.parts = list(parts)
+    def __init__(self, *parts):
+        self.parts = parts
+
+    def force_str(self):
+        self.parts = map(str, self.parts)
+        return self
 
     def __call__(self, *args):
         return Command(*self.parts, *args)
 
     def __str__(self):
         return ' '.join(map(str, self.parts))
-
-
-class StrCall:
-    def __init__(self, func):
-        self.func = func
-
-    def __str__(self):
-        return self.func
 
 
 class Macro:
@@ -155,24 +149,24 @@ def scoreboard(objective):
 
 
 class Execute:
-    def __init__(self, force_str=True):
-        self.force_str = force_str
+    def __init__(self):
         self.modifications = dict()
         self.condition_type = None
         self.condition_expr = None
         self.cmd_run = None
 
+    def force_str(self):
+        self.modifications = {k: str(v) for k, v in self.modifications.items()}
+        self.condition_type = str(self.condition_type)
+        self.condition_expr = str(self.condition_expr)
+        self.cmd_run = str(self.cmd_run)
+        return self
+
     def modify(self, **kwargs):
-        if self.force_str:
-            for k, v in self.modifications.items():
-                self.modifications[k] = str(v)
-        else:
-            self.modifications.update(kwargs)
+        self.modifications.update(kwargs)
         return self
 
     def as_(self, target):
-        if self.force_str:
-            target = str(target)
         self.modifications['as'] = target
         return self
 
@@ -181,8 +175,6 @@ class Execute:
 
     def condition(self, condition_type, condition):
         self.condition_type = condition_type
-        if self.force_str:
-            condition = str(condition)
         self.condition_expr = condition
         return self
 
@@ -191,8 +183,6 @@ class Execute:
         return self
 
     def run(self, cmd):
-        if self.force_str:
-            cmd = str(cmd)
         self.cmd_run = cmd
         return self
 

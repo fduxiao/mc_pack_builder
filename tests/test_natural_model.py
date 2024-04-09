@@ -1,8 +1,19 @@
 import unittest
-from mc_pack_builder import DictModel, Field, IntField, nbt
+from mc_pack_builder import DictModel, Field, IntField, nbt, Box
 
 
 class TestNaturalModel(unittest.TestCase):
+    def test_box(self):
+        real_data = {}
+        box = Box(None, lambda x: real_data.get('x'), lambda x: real_data.update({'x': x}))
+        self.assertIs(box.data, None)
+        box.data = "abc"
+        self.assertEqual(box.data, "abc")
+        self.assertDictEqual(real_data, {"x": "abc"})
+
+        box = Box(get_cast=lambda x: "lazy_string")
+        self.assertEqual(str(box), "lazy_string")
+
     def test_field_and_model(self):
         class A(DictModel):
             a = IntField(default=2)

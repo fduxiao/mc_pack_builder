@@ -5,8 +5,9 @@ from .pack import mc, magic
 weapons_funcs = magic.functions.dir("weapons")
 
 
+excalibur_enchantments = [mc.enchantments.sharpness(10)]
 excalibur = (mc.item("diamond_sword")
-             .enchant(mc.enchantments.sharpness(10))
+             .enchant(*excalibur_enchantments)
              .unbreakable()
              .display_name(Text("excalibur").color("red"))
              .lore("The master sword in the legend.")

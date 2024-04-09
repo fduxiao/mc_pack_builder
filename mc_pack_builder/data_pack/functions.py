@@ -4,6 +4,7 @@ from typing import IO
 
 from ..pack import Dir, Leaf
 from ..resources import Function
+from ..natural_model import Box
 
 
 class FunctionLeaf(Leaf):
@@ -33,7 +34,7 @@ class Functions(Dir):
         self.ensure_node(f'{path}.mcfunction', lambda: FunctionLeaf(func))
         return func
 
-    def make(self, force_str=True, before_body=None):
+    def make(self, before_body=None):
         """
         used when make a function from generator
         @functions.define()
@@ -41,15 +42,12 @@ class Functions(Dir):
             yield say("say1")
             yield say("say2")
 
-        :param force_str: force to apply str to each line
         :param before_body: whether to add extra guarding commands
         :return:
         """
         def decorator(func):
             result = self.new(func.__name__, before_body=before_body)
             body = func()
-            if force_str:
-                body = map(str, body)
             result.body(body)
             update_wrapper(result, func)
             return result
@@ -71,8 +69,10 @@ class LevelGuard(Functions):
 
     def get_guard_cmd(self, min_score):
         return [
-            f'execute if entity @s[type=player] run scoreboard players add @s {self.objective} 0',
-            'execute if entity @s[type=player, scores={%s}] run return fail' % f'{self.objective}=..{min_score-1}'
+            Box(get_cast=lambda _: f'execute if entity @s[type=player] run '
+                                   f'scoreboard players add @s {self.objective} 0'),
+            Box(get_cast=lambda _: 'execute if entity @s[type=player, scores={%s}] run '
+                                   'return fail' % f'{self.objective}=..{min_score-1}')
         ]
 
     def guarded_new(self, path: str | Path, min_score):
@@ -80,5 +80,5 @@ class LevelGuard(Functions):
         func.before_body = self.get_guard_cmd(min_score)
         return self
 
-    def guarded_make(self, min_score, force_str=True):
-        return self.make(force_str, before_body=self.get_guard_cmd(min_score))
+    def guarded_make(self, min_score):
+        return self.make(before_body=self.get_guard_cmd(min_score))
