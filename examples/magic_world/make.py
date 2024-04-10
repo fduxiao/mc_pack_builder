@@ -12,7 +12,8 @@ config.ADMIN_LEVEL.data = 9
 
 
 # some modifications if you want
-@admin_guard.guarded_make(3)
+@magic.functions.new()
+@admin_guard.level_guard(3)
 def f3():
     yield cmd.say("I am f3.")
 

@@ -6,7 +6,7 @@ from ..namespace import Namespace
 from ..resources import Resource
 from .tags import Tags
 from .recipes import Recipes
-from .functions import Functions, LevelGuard
+from .functions import Functions
 
 
 class DatapackNamespace(Dir):
@@ -38,26 +38,10 @@ class DatapackNamespace(Dir):
 
     @property
     def functions(self):
-        return self.ensure_node("functions", lambda: Functions(self.namespace.name))
-
-    def level_guard(self, objective, min_score_init):
-        """
-        In case you want to control whether a function is allowed to execute by some player,
-        you can use score board to make a guard for that.
-
-        :param objective: scoreboard objective
-        :param min_score_init: specify the min score to guard the on_load function
-        :return:
-        """
-        self.on_load(f'scoreboard objectives add {objective} dummy')
-        guard = self.ensure_node("functions", lambda: LevelGuard(self.namespace.name, objective=objective))
-        if not isinstance(guard, LevelGuard):
-            # in case it exists
-            nodes = guard.nodes
-            guard = LevelGuard(self.namespace, objective=objective)
-            guard.nodes = nodes
-        self.on_load(*guard.get_guard_cmd(min_score_init))
-        return guard
+        return self.ensure_node("functions", lambda: Functions(self.namespace.name, data={
+            "on_load": self.on_load,
+            "on_tick": self.on_tick,
+        }))
 
     def on_load(self, *cmds):
         if self._on_load is None:

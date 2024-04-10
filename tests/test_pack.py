@@ -60,19 +60,23 @@ class TestPack(unittest.TestCase):
             cmd.say('hello')
         ])
 
-        @functions.make()
+        @functions.new()
         def f2():
             yield cmd.tell(cmd.at_s(), "some thing")
 
         dir2 = functions.dir("dir2")
 
-        @dir2.make()
+        @dir2.new(path="f5").make
         def f3():
-            yield cmd.say('f3')
+            """f3 doc"""
+            return [
+                cmd.say('f3')
+            ]
 
         self.assertEqual(f1.resource_location(), 'some_pack:dir/f1')
         self.assertEqual(f2.resource_location(), 'some_pack:f2')
-        self.assertEqual(f3.resource_location(), 'some_pack:dir2/f3')
+        self.assertEqual(f3.resource_location(), 'some_pack:dir2/f5')
+        self.assertEqual(f3.__doc__, 'f3 doc')
 
         fs = DictFileSystem()
         data_pack.write_to(fs=fs)
@@ -84,7 +88,7 @@ class TestPack(unittest.TestCase):
                                              'say hello\n'},
                     'f2.mcfunction': '# function f2\n'
                                      'tell @s some thing\n',
-                    'dir2': {'f3.mcfunction': '# function f3'
+                    'dir2': {'f5.mcfunction': '# function f5'
                                               '\nsay f3\n'}
                 }
             }}

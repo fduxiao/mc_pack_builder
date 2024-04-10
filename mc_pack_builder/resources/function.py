@@ -1,27 +1,22 @@
+from functools import update_wrapper
 from ..resources import Resource
 from ..natural_model import NaturalModel
 
 
 class Function(Resource):
-    def __init__(self, body=None, resource_id="", namespace="microsoft", before_body=None):
+    def __init__(self, body=None, resource_id="", namespace="microsoft"):
         super().__init__(resource_id, namespace)
         if body is None:
             body = []
         self._body = body
         self.name = resource_id.split('/')[-1]
-        if before_body is None:
-            before_body = []
-        self.before_body = before_body
 
     def force_str(self):
         self._body = map(str, self._body)
-        self.before_body = map(str, self.before_body)
         return self
 
     def gen_lines(self):
         yield f'# function {self.name}'
-        for line in self.before_body:
-            yield str(line)
         for line in self._body:
             yield str(line)
 
@@ -31,6 +26,12 @@ class Function(Resource):
         if not hasattr(body, '__iter__'):
             body = [body]
         self._body = body
+        return self
+
+    def make(self, func):
+        """used as a decorator"""
+        update_wrapper(self, func)
+        self.extend(*func())
         return self
 
     def extend(self, *cmds):

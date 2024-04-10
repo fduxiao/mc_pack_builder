@@ -8,7 +8,8 @@ while if you want to make chest with this item, you should then use
 you may want to use item.resource_location(), item.as_str(), item.item_nbt for different purposes.
 Thus, a part of a command is a callable returning a string, i.e., a class with __str__ method
 """
-from .natural_model import serialize_tag, py2nbt
+from functools import wraps
+from .natural_model import serialize_tag, py2nbt, Box
 
 
 class Command:
@@ -142,6 +143,22 @@ class ScoreBoard:
         if set_value:
             cmd = cmd('set', set_value)
         return cmd
+
+    def level_guard_cmds(self, min_score):
+        yield Box(get_cast=lambda _: f'execute if entity @s[type=player] run '
+                                     f'scoreboard players add @s {self.objective} 0')
+        yield Box(get_cast=lambda _: 'execute if entity @s[type=player, scores={%s}] run '
+                                     'return fail' % f'{self.objective}=..{min_score - 1}')
+
+    def level_guard(self, min_score):
+        """used as a decorator"""
+        def wrapper(func):
+            @wraps(func)
+            def wrapped():
+                yield from self.level_guard_cmds(min_score)
+                yield from func()
+            return wrapped
+        return wrapper
 
 
 def scoreboard(objective):

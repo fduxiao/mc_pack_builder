@@ -9,19 +9,19 @@ f1 = functions.new('dir/f1').body([
 ])
 
 
-@functions.make()
+@functions.new()
 def f2():
     yield tell(at_s(), "some thing")
 
 
-@functions.make()
+@functions.new()
 def test_menu():
     yield tell(at_s(), "Test the following functions")
     yield tellraw(at_s(), Text("[f1]: say hello").color("yellow").run_command(f1()))
     yield tellraw(at_s(), Text("[f2]: tell something").color("yellow").run_command(f2()))
 
 
-@functions.make()
+@functions.new()
 def menu_func():
     yield tellraw(at_s(), "Welcome to my magic world\n\n"
                           "You have the following operations:\n"

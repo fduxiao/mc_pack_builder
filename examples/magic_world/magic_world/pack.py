@@ -1,4 +1,4 @@
-from mc_pack_builder import DataPack, Minecraft
+from mc_pack_builder import DataPack, Minecraft, ScoreBoard
 from . import config
 
 # the Minecraft namespace
@@ -8,4 +8,6 @@ mc = Minecraft()
 data_pack = DataPack("some convenient magic", 26)
 # the datapack namespace
 magic = data_pack.namespace("magic")
-admin_guard = magic.level_guard(config.ADMIN_SCOREBOARD_NAME, config.ADMIN_LEVEL)
+admin_guard = ScoreBoard(config.ADMIN_SCOREBOARD_NAME)
+
+magic.on_load(admin_guard.add_objective(), *admin_guard.level_guard_cmds(config.ADMIN_LEVEL))
