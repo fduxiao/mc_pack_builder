@@ -71,6 +71,9 @@ class Box:
     def data(self, value):
         self._data = self._set_cast(value)
 
+    def simplify(self):
+        return Box(self.data)
+
     def __call__(self, *args, **kwargs):
         return self.data(*args, **kwargs)
 
@@ -78,16 +81,16 @@ class Box:
         return str(self.data)
 
     def __add__(self, other):
-        return Box(self.data + other)
+        return Box(get_cast=lambda _: self.data + other)
 
     def __radd__(self, other):
-        return Box(other + self.data)
+        return Box(get_cast=lambda _: other + self.data)
 
     def __sub__(self, other):
-        return Box(self.data - other)
+        return Box(get_cast=lambda _: self.data - other)
 
     def __rsub__(self, other):
-        return Box(other - self.data)
+        return Box(get_cast=lambda _: other - self.data)
 
 
 class NaturalModel:

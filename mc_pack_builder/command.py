@@ -9,15 +9,16 @@ you may want to use item.resource_location(), item.as_str(), item.item_nbt for d
 Thus, a part of a command is a callable returning a string, i.e., a class with __str__ method
 """
 from functools import wraps
-from .natural_model import serialize_tag, py2nbt, Box
+from .natural_model import serialize_tag, py2nbt
 
 
 class Command:
     """
     A command just collects a lot of parts, which can be mapped to string
     """
-    def __init__(self, *parts):
+    def __init__(self, *parts, sep=' '):
         self.parts = parts
+        self.joint = sep
 
     def force_str(self):
         self.parts = map(str, self.parts)
@@ -27,7 +28,11 @@ class Command:
         return Command(*self.parts, *args)
 
     def __str__(self):
-        return ' '.join(map(str, self.parts))
+        return self.joint.join(map(str, self.parts))
+
+
+def brace(*args, sep=', '):
+    return Command('{', Command(*args, sep=sep), '}', sep='')
 
 
 class Macro:
@@ -133,6 +138,9 @@ class ScoreBoard:
     def set_player(self, target, score):
         return self.cmd_player('set', target, self.objective, score)
 
+    def add_player(self, target, value=0):
+        return self.cmd_player('add', target, self.objective, value)
+
     def get_player(self, target):
         return self.cmd_player('get', target, self.objective)
 
@@ -144,11 +152,14 @@ class ScoreBoard:
             cmd = cmd('set', set_value)
         return cmd
 
+    def __lt__(self, other):
+        return Command(self.objective, '=', '..', other - 1, sep='')
+
     def level_guard_cmds(self, min_score):
-        yield Box(get_cast=lambda _: f'execute if entity @s[type=player] run '
-                                     f'scoreboard players add @s {self.objective} 0')
-        yield Box(get_cast=lambda _: 'execute if entity @s[type=player, scores={%s}] run '
-                                     'return fail' % f'{self.objective}=..{min_score - 1}')
+        yield execute().if_entity(at_s(type='player')).force_str().run(self.add_player(at_s(), 0))
+        yield execute().if_entity(
+            at_s(type='player', scores=brace(self < min_score))
+        ).run('return fail')
 
     def level_guard(self, min_score):
         """used as a decorator"""
