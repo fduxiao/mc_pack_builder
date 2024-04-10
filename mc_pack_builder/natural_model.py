@@ -57,6 +57,9 @@ class Box:
     """
     mimic a pointer in python.
     This can be used to make a lazy string for the commands and configuration
+
+    I am thinking whether this class is necessary, or I should use the Box pointer
+    to make the natural model.
     """
     def __init__(self, data=None, get_cast=lambda x: x, set_cast=lambda x: x):
         self._data = data
