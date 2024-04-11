@@ -14,7 +14,7 @@ class TestCommand(unittest.TestCase):
     def test_target_selector(self):
         self.assertEqual(str(at('e')(type='item')
                              .nbt(Item=make_sword().item_nbt(False))),
-                         '@e[type=item,nbt={Item: {id: "minecraft:diamond_sword", tags: {Unbreakable: 1}}}]')
+                         '@e[type=item,nbt={Item: {id: "minecraft:diamond_sword", tag: {Unbreakable: 1}}}]')
 
     def test_give(self):
         sword = make_sword().enchant(mc.enchantments.sharpness(10))

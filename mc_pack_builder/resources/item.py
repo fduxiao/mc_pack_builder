@@ -4,7 +4,7 @@ we have to use {item:{id:...}}, so I provided a different item_nbt method in thi
 """
 import json
 
-from ..natural_model import Field, nbt, DictModel
+from ..natural_model import Field, nbt, DictModel, py2nbt, serialize_tag
 from .enchantments import Enchantment
 from .resource import Resource
 
@@ -39,8 +39,13 @@ class Display(DictModel):
     color = Field(cast=parse_color)
 
 
+class CustomID(dict):
+    def __str__(self):
+        return serialize_tag(py2nbt(self))
+
+
 class Item(Resource):
-    _count: int = 1
+    _count: int = None
 
     @property
     def count(self):
@@ -63,12 +68,26 @@ class Item(Resource):
         """
         data = {
             "id": nbt.String(self.resource_location()),
-            "tags": self.dump_nbt(),
+            "tag": self.dump_nbt(),
             **kwargs
         }
-        if with_count:
+        if with_count and self.count is not None:
             data['count'] = nbt.Int(self.count)
         return nbt.Compound(data)
+
+    def custom_id(self, custom_id=None, count: bool | int = False):
+        """
+        used when one to distinguish items through a unique id
+        """
+        if custom_id is not None:
+            self.set_data('CustomID', custom_id)
+            return self
+        custom_id = self.get('CustomID', None)
+        if custom_id is None:
+            raise KeyError('Custom ID is not set')
+        result = Item(self.resource_id, self.namespace)
+        result.custom_id(custom_id)
+        return result
 
     enchantments: list = Field("Enchantments", default=[])
 
@@ -88,6 +107,10 @@ class Item(Resource):
     _display = Display(name="display")
 
     def display_name(self, name):
+        if not isinstance(name, str):
+            name = str(name)
+        if not name.startswith('{'):
+            name = json.dumps({"text": name})
         self._display.display_name = name
         return self
 

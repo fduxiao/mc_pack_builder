@@ -21,9 +21,12 @@ def test_menu():
     yield tellraw(at_s(), Text("[f2]: tell something").color("yellow").run_command(f2()))
 
 
-@trigger_group.new()
+menu_trigger = functions.trigger_group('menu')
+
+
+@menu_trigger.new()
 def menu_func():
     yield tellraw(at_s(), "Welcome to my magic world\n\n"
                           "You have the following operations:\n"
-                          "    " + Text("weapon book").run_command(books.give_weapon_book.trigger()) +
-                          "    " + Text("magic book").run_command(books.give_magic_book.trigger()))
+                          "    " + Text("weapon book").color('green').run_command(books.give_weapon_book.trigger()) +
+                          "    " + Text("magic book").color('green').run_command(books.give_magic_book.trigger()))

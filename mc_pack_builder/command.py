@@ -9,6 +9,7 @@ you may want to use item.resource_location(), item.as_str(), item.item_nbt for d
 Thus, a part of a command is a callable returning a string, i.e., a class with __str__ method
 """
 from functools import wraps
+from nbtlib.tag import Base
 from .natural_model import serialize_tag, py2nbt
 
 
@@ -70,7 +71,12 @@ class Target:
             nbt = py2nbt(self._nbt)
             arguments['nbt'] = serialize_tag(nbt)
         if arguments:
-            arg_str = ",".join(map(lambda item: f"{item[0]}={item[1]}", arguments.items()))
+            def parse_item(item):
+                key, value = item
+                if isinstance(value, Base):
+                    value = serialize_tag(value)
+                return f'{key}={value}'
+            arg_str = ",".join(map(parse_item, arguments.items()))
             arg_str = f'[{arg_str}]'
         else:
             arg_str = ""
@@ -97,6 +103,16 @@ class Target:
         self._nbt.update(kwargs)
         return self
 
+    def selected_item(self, item, with_count=True, custom_id=True, **kwargs):
+        # to avoid a loop import
+        from .resources import Item
+        if isinstance(item, Item):
+            if custom_id:
+                item = item.custom_id()
+            item = item.item_nbt(with_count, **kwargs)
+        self.nbt(SelectedItem=item)
+        return self
+
 
 def at(var):
     return Target(var)
@@ -112,6 +128,7 @@ tell = Command('tell')
 tellraw = Command('tellraw')
 trigger = Command('trigger')
 summon = Command('summon')
+clear = Command('clear')
 
 
 class ScoreBoard:

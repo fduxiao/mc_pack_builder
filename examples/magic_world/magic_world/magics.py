@@ -23,8 +23,15 @@ magic_book.pages(
 
 
 # make scroll that can be used by a carrot_stick
+line = Text("The following are available scrolls.\n\n")
+
+fire_scroll = mc.paper().custom_id('fire_scroll').display_name(Text('fire scroll').color('red'))
+line += Text('fire scroll').color('red').run_command(give(at_s(), fire_scroll, 10)) + ": summon a fire ball"
+
+magic_book.pages(line)
 
 
 @carrot_stick.new()
-def carrot_call():
-    yield tell(at_s(), 'used')
+def magic_carrot_call():
+    yield execute().if_entity(at_s().selected_item(fire_scroll)).run(fireball())
+    yield execute().if_entity(at_s().selected_item(fire_scroll)).run(clear('@s', fire_scroll.custom_id(), 1))

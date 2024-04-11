@@ -27,3 +27,6 @@ class Minecraft(Namespace):
 
     def carrot_stick(self):
         return self.item("carrot_on_a_stick")
+
+    def paper(self):
+        return self.item('paper')
