@@ -1,8 +1,8 @@
 from mc_pack_builder import *
-from .pack import magic
+from .pack import magic_ns, trigger_group
 from . import books
 
-functions = magic.functions
+functions = magic_ns.functions
 
 f1 = functions.new('dir/f1').body([
     say('hello')
@@ -21,8 +21,9 @@ def test_menu():
     yield tellraw(at_s(), Text("[f2]: tell something").color("yellow").run_command(f2()))
 
 
-@functions.new()
+@trigger_group.new()
 def menu_func():
     yield tellraw(at_s(), "Welcome to my magic world\n\n"
                           "You have the following operations:\n"
-                          "    " + Text("weapon book").run_command(books.give_weapon_book()))
+                          "    " + Text("weapon book").run_command(books.give_weapon_book.trigger()) +
+                          "    " + Text("magic book").run_command(books.give_magic_book.trigger()))

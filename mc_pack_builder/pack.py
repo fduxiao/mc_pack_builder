@@ -124,8 +124,10 @@ class Branch(FSTree):
     for a branch
     """
 
-    def __init__(self):
-        self.nodes: dict[Path, FSTree] = dict()
+    def __init__(self, nodes: dict[Path, FSTree] = None):
+        if nodes is None:
+            nodes = dict()
+        self.nodes: dict[Path, FSTree] = nodes
 
     def add_node(self, path: str | Path, node: FSTree):
         """
@@ -221,8 +223,8 @@ class Dir(Branch):
     a helper to gather different leaves
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, nodes: dict[Path, FSTree] = None):
+        super().__init__(nodes)
 
     def dir(self, path: str | Path) -> "Dir":
         return self.ensure_node(path, Dir)

@@ -10,6 +10,21 @@ class Function(Resource):
             body = []
         self._body = body
         self.name = resource_id.split('/')[-1]
+        self._trigger = None
+
+    def trigger(self, objective=None, value=None):
+        """
+        When the function is used by a non-privileged player by command trigger, this method
+        specifies/returns what to use
+
+        :param objective:
+        :param value:
+        :return:
+        """
+        if objective is None:
+            objective, value = self._trigger
+            return f'trigger {objective} set {value}'
+        self._trigger = objective, value
 
     def force_str(self):
         self._body = map(str, self._body)

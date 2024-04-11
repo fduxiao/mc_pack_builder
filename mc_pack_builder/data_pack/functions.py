@@ -1,9 +1,10 @@
+from functools import partial
 from pathlib import Path
-from typing import IO
+from typing import IO, Callable, TypeVar
 
+from .. import FileSystem
 from ..pack import Dir, Leaf
 from ..resources import Function
-from typing import Callable
 
 
 class FunctionLeaf(Leaf):
@@ -15,9 +16,12 @@ class FunctionLeaf(Leaf):
             file.write(f'{i}\n')
 
 
+T = TypeVar('T')
+
+
 class Functions(Dir):
-    def __init__(self, namespace="", prefix: Path | str = "", data=None):
-        super().__init__()
+    def __init__(self, namespace="", prefix: Path | str = "", data=None, nodes=None):
+        super().__init__(nodes)
         self.namespace = namespace
         self.prefix = Path(prefix)
 
@@ -49,10 +53,11 @@ class Functions(Dir):
     def dir(self, path: str | Path) -> "Functions":
         return self.ensure_node(path, lambda: Functions(self.namespace, self.prefix / path, self.data))
 
-    def fork(self):
-        functions = Functions(self.namespace, self.prefix, self.data)
-        functions.nodes = self.nodes
-        return self
+    def fork(self, fork_type: Callable[[...], T] = None) -> T:
+        if fork_type is None:
+            fork_type = type(self)
+        functions = fork_type(self.namespace, self.prefix, self.data, self.nodes)
+        return functions
 
     def new(self, path: str | Path = None, body=None) -> Function | Callable[[...], Function]:
         """
@@ -88,3 +93,125 @@ class Functions(Dir):
                 func.make(yield_func)
                 return func
             return wrapper
+
+    def trigger_group(self, objective, tree_dir=None):
+        if tree_dir is None:
+            tree_dir = f"trigger_tree_{objective}"
+
+        trigger_group: TriggerGroup = self.fork(partial(TriggerGroup, objective=objective, tree_dir=tree_dir))
+        self.on_load(f'scoreboard objectives add {objective} trigger')
+        self.on_load(trigger_group.enable())
+        return trigger_group
+
+
+class TriggerGroup(Functions):
+    """
+    You may want to have a non-privilege player use /function command, but usually, this
+    command cannot be used by a player with level 0. The solution is to use a scoreboard
+    objective with trigger. When one want to call a function, he/she just triggers the
+    corresponding objective. A tick function will then test whether the objective is the
+    desired value and call the function.
+
+    The TriggerGroup is designed for that purpose. To use it, you have to add an objective
+    in on_load, and make a tick function to test it. The problem is that if you have thousands
+    of objectives to check, then it may take a lot of time. Thus, a search tree is also provided
+    for the trigger_group. The tick function and the search tree are store in a directory called
+    tree_dir as functions.
+    """
+    def __init__(self, namespace="", prefix: Path | str = "", data=None, nodes=None, *, objective=None, tree_dir=None):
+        super().__init__(namespace, prefix, data, nodes)
+        if objective:
+            self.data['objective'] = objective
+        if tree_dir:
+            # After called, the trigger_group just forks a new :py:class:`TriggerGroup` class.
+            # The existing node is not changed. Thus, we cannot just overload the `dump` method.
+            # Instead, a new class describing the dump phenomenon is needed.
+            self.ensure_node(tree_dir, lambda: TreeBuilder(self.namespace, self.prefix / tree_dir, self.data))
+
+    @property
+    def objective(self):
+        return self.get('objective')
+
+    @property
+    def functions(self) -> dict:
+        return self.set_default('functions', {})
+
+    @property
+    def max_trigger_value(self):
+        return self.get('function_max', 0)
+
+    @max_trigger_value.setter
+    def max_trigger_value(self, x):
+        self.set('function_max', x)
+
+    def dir(self, path: str | Path) -> "TriggerGroup":
+        result = self.ensure_node(path, lambda: TriggerGroup(self.namespace, self.prefix / path, self.data))
+        if not isinstance(result, TriggerGroup):
+            nodes = result.nodes
+            result = TriggerGroup(result.namespace, self.prefix / path, self.data)
+            result.nodes = nodes
+        return result
+
+    def enable(self, target='@a'):
+        return f'scoreboard players enable {target} {self.objective}'
+
+    def get_trigger(self, trigger_value=None):
+        if trigger_value in self.functions:
+            raise KeyError(f"duplicated key {trigger_value}")
+        if trigger_value is None:
+            trigger_value = self.max_trigger_value + 1
+        self.max_trigger_value = max(trigger_value, self.max_trigger_value)
+        return self.objective, trigger_value
+
+    def new(self, path: str | Path = None, body=None, trigger_value=None) -> Function | Callable[[...], Function]:
+        result = super().new(path, body)
+        objective, trigger_value = self.get_trigger(trigger_value)
+        if isinstance(result, Function):
+            result.trigger(objective, trigger_value)
+            self.functions[trigger_value] = result
+            return result
+
+        # then result is the wrapper. Make a new one
+        def wrapper(yield_func):
+            func: Function = result(yield_func)
+            func.trigger(objective, trigger_value)
+            self.functions[trigger_value] = func
+            return func
+        return wrapper
+
+
+class TreeBuilder(Functions):
+    """
+    Help build the trigger tree in the trigger_tree directory
+    """
+    def __init__(self, namespace="", prefix: Path | str = "", data=None):
+        super().__init__(namespace, prefix, data)
+        # use the new function f
+        self.tree_func = self.new('tick')
+        self.on_tick(f'execute as @a at @s run {self.tree_func()}')
+
+    # we also need the following two as in TriggerGroup
+    @property
+    def objective(self):
+        return self.get('objective')
+
+    @property
+    def functions(self) -> dict:
+        return self.set_default('functions', {})
+
+    def dump(self, rel_path: Path, fs: FileSystem):
+        def make_scores(value):
+            scores = f'{self.objective}=%s' % value
+            scores = '{%s}' % scores
+            return scores
+
+        # build the tick function
+        for trigger_value, func in self.functions.items():
+
+            self.tree_func.extend(f'execute if entity @s[scores={make_scores(trigger_value)}] run {func()}')
+        self.tree_func.extend(
+            f'execute if entity @s[scores={make_scores("0..")}] run scoreboard players set @s {self.objective} 0',
+            f'execute if entity @s[scores={make_scores("0..")}] run scoreboard players enable @s {self.objective}',
+        )
+        # call the usual dump function
+        return super().dump(rel_path, fs)

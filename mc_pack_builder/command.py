@@ -111,6 +111,7 @@ say = Command('say')
 tell = Command('tell')
 tellraw = Command('tellraw')
 trigger = Command('trigger')
+summon = Command('summon')
 
 
 class ScoreBoard:

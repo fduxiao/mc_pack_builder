@@ -26,7 +26,5 @@ class Resource(DictModel):
         return self.as_str()
 
     def set_data(self, key, value):
-        if isinstance(value, NaturalModel):
-            value = value.dump()
         self.dict[key] = value
         return self

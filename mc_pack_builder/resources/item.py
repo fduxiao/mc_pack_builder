@@ -118,6 +118,12 @@ class Item(Resource):
         self.set_data("author", author)
         return self
 
+    _pages: list = Field('pages', default=[], cast=list)
+
+    def clear_pages(self):
+        self._pages.clear()
+        return self
+
     def pages(self, *pages):
-        self.set_data("pages", list(pages))
+        self._pages.extend(pages)
         return self

@@ -14,13 +14,13 @@ magic_world = MagicWorld()
 
 
 # some modifications if you want
-@magic_world.magic.functions.new()
+@magic_world.magic_ns.functions.new()
 @magic_world.admin_guard.level_guard(3)
 def f3():
     yield cmd.say("I am f3.")
 
 
-magic_world.magic.on_load(cmd.tell("@a", "on load"))
+magic_world.magic_ns.on_load(cmd.tell("@a", "on load"))
 magic_world.weapons.excalibur_enchantments[0].lvl(11)
 
 
