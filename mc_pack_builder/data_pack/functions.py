@@ -51,13 +51,22 @@ class Functions(Dir):
         return self.data.setdefault(key, default)
 
     def dir(self, path: str | Path) -> "Functions":
-        return self.ensure_node(path, lambda: Functions(self.namespace, self.prefix / path, self.data))
+        node = self.ensure_node(path, lambda: type(self)(self.namespace, self.prefix / path, self.data))
+        if not isinstance(node, type(self)):
+            node = type(self)(self.namespace, self.prefix / path, self.data, node.nodes)
+        return node
 
-    def fork(self, fork_type: Callable[[...], T] = None) -> T:
+    def fork(self, fork_type: Callable[[...], T] = None, copy=True) -> T:
         if fork_type is None:
             fork_type = type(self)
-        functions = fork_type(self.namespace, self.prefix, self.data, self.nodes)
+        data = self.data
+        if copy:
+            data = data.copy()
+        functions = fork_type(self.namespace, self.prefix, data, self.nodes)
         return functions
+
+    def post_new(self, func):
+        return func
 
     def new(self, path: str | Path = None, body=None) -> Function | Callable[[...], Function]:
         """
@@ -84,15 +93,24 @@ class Functions(Dir):
 
         if path is not None:
             leaf = self.ensure_node(f'{path}.mcfunction', make_func)
-            return leaf.func
+            return self.post_new(leaf.func)
         else:
             def wrapper(yield_func):
                 nonlocal path
                 path = yield_func.__name__
                 func = self.ensure_node(f'{yield_func.__name__}.mcfunction', make_func).func
                 func.make(yield_func)
-                return func
+                return self.post_new(func)
             return wrapper
+
+    def scoreboard_positive(self, objective, criteria="dummy", tree_dir=None):
+        if tree_dir is None:
+            tree_dir = f"trigger_tree_{objective}"
+        scoreboard_positive: ScoreboardPositive = self.fork(
+            partial(ScoreboardPositive, objective=objective, tree_dir=tree_dir)
+        )
+        self.on_load(f'scoreboard objectives add {objective} {criteria}')
+        return scoreboard_positive
 
     def trigger_group(self, objective, tree_dir=None):
         if tree_dir is None:
@@ -102,6 +120,27 @@ class Functions(Dir):
         self.on_load(f'scoreboard objectives add {objective} trigger')
         self.on_load(trigger_group.enable())
         return trigger_group
+
+
+class ScoreboardPositive(Functions):
+    """
+    when a scoreboard objective is set positive
+    """
+    def __init__(self, namespace="", prefix: Path | str = "", data=None, nodes=None, *,
+                 objective=None, tree_dir: str | Path = None):
+        super().__init__(namespace, prefix, data, nodes)
+        if objective:
+            self.data['objective'] = objective
+        if tree_dir:
+            self.ensure_node(tree_dir, lambda: TreeBuilder(self.namespace, self.prefix / tree_dir, self.data))
+
+    @property
+    def run_positive(self) -> Function:
+        return self.data.get('run_positive')
+
+    def post_new(self, func):
+        self.run_positive.extend(func())
+        return func
 
 
 class TriggerGroup(Functions):
@@ -144,14 +183,6 @@ class TriggerGroup(Functions):
     def max_trigger_value(self, x):
         self.set('function_max', x)
 
-    def dir(self, path: str | Path) -> "TriggerGroup":
-        result = self.ensure_node(path, lambda: TriggerGroup(self.namespace, self.prefix / path, self.data))
-        if not isinstance(result, TriggerGroup):
-            nodes = result.nodes
-            result = TriggerGroup(result.namespace, self.prefix / path, self.data)
-            result.nodes = nodes
-        return result
-
     def enable(self, target='@a'):
         return f'scoreboard players enable {target} {self.objective}'
 
@@ -186,8 +217,10 @@ class TreeBuilder(Functions):
     """
     def __init__(self, namespace="", prefix: Path | str = "", data=None):
         super().__init__(namespace, prefix, data)
-        # use the new function f
         self.tree_func = self.new('tick')
+        self.data['run_positive'] = self.new('run_positive')
+        self.tree_func.extend(f'execute as @a at @s if entity @s[scores={self.make_scores("1..")}] '
+                              f'run {self.run_positive()}')
         self.on_tick(f'execute as @a at @s run {self.tree_func()}')
 
     # we also need the following two as in TriggerGroup
@@ -199,19 +232,23 @@ class TreeBuilder(Functions):
     def functions(self) -> dict:
         return self.set_default('functions', {})
 
-    def dump(self, rel_path: Path, fs: FileSystem):
-        def make_scores(value):
-            scores = f'{self.objective}=%s' % value
-            scores = '{%s}' % scores
-            return scores
+    # for extra run_positive functions
+    @property
+    def run_positive(self) -> functions:
+        return self.get('run_positive')
 
+    def make_scores(self, value):
+        scores = f'{self.objective}=%s' % value
+        scores = '{%s}' % scores
+        return scores
+
+    def dump(self, rel_path: Path, fs: FileSystem):
         # build the tick function
         for trigger_value, func in self.functions.items():
-
-            self.tree_func.extend(f'execute if entity @s[scores={make_scores(trigger_value)}] run {func()}')
+            self.tree_func.extend(f'execute if entity @s[scores={self.make_scores(trigger_value)}] run {func()}')
         self.tree_func.extend(
-            f'execute if entity @s[scores={make_scores("0..")}] run scoreboard players set @s {self.objective} 0',
-            f'execute if entity @s[scores={make_scores("0..")}] run scoreboard players enable @s {self.objective}',
+            f'execute if entity @s[scores={self.make_scores("0..")}] run scoreboard players set @s {self.objective} 0',
+            f'execute if entity @s[scores={self.make_scores("0..")}] run scoreboard players enable @s {self.objective}',
         )
         # call the usual dump function
         return super().dump(rel_path, fs)

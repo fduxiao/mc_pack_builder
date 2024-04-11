@@ -8,7 +8,9 @@ class Function(Resource):
         super().__init__(resource_id, namespace)
         if body is None:
             body = []
+        self.before_body = []
         self._body = body
+        self.after_body = []
         self.name = resource_id.split('/')[-1]
         self._trigger = None
 
@@ -30,10 +32,18 @@ class Function(Resource):
         self._body = map(str, self._body)
         return self
 
-    def gen_lines(self):
+    def gen_raw(self):
         yield f'# function {self.name}'
-        for line in self._body:
-            yield str(line)
+        yield from self.before_body
+        yield from self._body
+        yield from self.after_body
+
+    def force_list(self):
+        self._body = list(self.gen_raw())
+        return self
+
+    def gen_lines(self):
+        return map(str, self.gen_raw())
 
     def body(self, body=None):
         if body is None:

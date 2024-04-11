@@ -14,3 +14,4 @@ magic_ns.on_load(admin_guard.add_objective(), *admin_guard.level_guard_cmds(conf
 
 
 trigger_group = magic_ns.functions.trigger_group('magic_func_trigger')
+carrot_stick = magic_ns.functions.scoreboard_positive('carrot_stick', mc.used(mc.carrot_stick()))

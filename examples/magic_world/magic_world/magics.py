@@ -1,5 +1,5 @@
 from mc_pack_builder import *
-from .pack import trigger_group, mc
+from .pack import trigger_group, mc, carrot_stick
 
 
 magics = trigger_group.dir("magics")
@@ -20,3 +20,11 @@ magic_book.pages(
     "Fireballs:\n\n" +
     Text("fireball1").color('red').run_command(fireball.trigger())
 )
+
+
+# make scroll that can be used by a carrot_stick
+
+
+@carrot_stick.new()
+def carrot_call():
+    yield tell(at_s(), 'used')
