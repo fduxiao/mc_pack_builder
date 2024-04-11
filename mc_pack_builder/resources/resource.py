@@ -11,7 +11,7 @@ class Resource(DictModel):
     This class represents a minecraft resource
     """
 
-    def __init__(self, resource_id="", namespace="microsoft"):
+    def __init__(self, resource_id="", namespace="minecraft"):
         super().__init__()
         self.resource_id = resource_id
         self.namespace = namespace
