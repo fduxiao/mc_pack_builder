@@ -13,7 +13,7 @@ magic_book.pages(
 
 @magics.new()
 def fireball():
-    yield summon(mc.item('fireball').resource_location(), '^ ^1 ^2', '{ExplosionPower: 2}')
+    yield summon(mc.item('fireball').resource_location(), '^ ^1 ^2', '{ExplosionPower: 5}')
 
 
 magic_book.pages(
@@ -52,14 +52,23 @@ fire_scroll = Scroll('fire scroll', 'red', 'summon a fire ball')
 fire_scroll.set_cmd(fireball())
 lightning_scroll = Scroll('lightning scroll', 'blue', 'summon a lighting bolt')
 lightning_scroll.set_cmd(
-    *(f'summon minecraft:lightning_bolt ^ ^ ^{i}' for i in range(6, 11))
+    *(f'summon minecraft:lightning_bolt ^ ^ ^{i}' for i in range(6, 11)),
+    *(f'summon minecraft:lightning_bolt ^ ^ ^{i}' for i in range(6, 11)),
+    *(f'summon minecraft:lightning_bolt ^ ^ ^{i}' for i in range(6, 11)),
 )
 arrow_scroll = Scroll('arrow scroll', 'gray', 'summon a rain of arrows')
-arrow_scroll.set_cmd(
-    *(f'summon minecraft:arrow ^-1 ^10 ^{i} ''{Potion:"minecraft:strong_harming"}' for i in range(6, 11)),
-    * (f'summon minecraft:arrow ^ ^10 ^{i} ''{Potion:"minecraft:strong_harming"}' for i in range(6, 11)),
-    * (f'summon minecraft:arrow ^1 ^10 ^{i} ''{Potion:"minecraft:strong_harming"}' for i in range(6, 11)),
-)
+arrow_nbt = '{Potion:"minecraft:strong_harming"}'
+
+
+@magics.new()
+def rain_arrows():
+    for i in range(-4, 4):
+        for j in range(0, 8):
+            yield f'summon minecraft:arrow ^{i / 2} ^10 ^{8 + j / 2} {arrow_nbt}'
+
+
+arrow_scroll.set_cmd(rain_arrows())
+
 
 for scroll in Scroll.scrolls:
     line += scroll.line + '\n\n'
