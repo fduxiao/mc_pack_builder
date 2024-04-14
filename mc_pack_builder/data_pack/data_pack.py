@@ -59,6 +59,13 @@ class DatapackNamespace(Dir):
         self._on_tick.extend(*cmds)
         return self
 
+    def scoreboard(self, name):
+        # to avoid loop import
+        from ..command import ScoreBoard
+        sb = ScoreBoard(name)
+        self.on_load(sb.add_objective())
+        return sb
+
 
 class MCMeta(DictModel):
     desc = Field("pack/description")

@@ -75,7 +75,7 @@ class Item(Resource):
             data['count'] = nbt.Int(self.count)
         return nbt.Compound(data)
 
-    def custom_id(self, custom_id=None, count: bool | int = False):
+    def custom_id(self, custom_id=None):
         """
         used when one to distinguish items through a unique id
         """
@@ -104,18 +104,18 @@ class Item(Resource):
     def entity_tag(self, tag):
         self.set_data("EntityTag", tag)
 
-    _display = Display(name="display")
+    display = Display(name="display")
 
     def display_name(self, name):
         if not isinstance(name, str):
             name = str(name)
         if not name.startswith('{'):
             name = json.dumps({"text": name})
-        self._display.display_name = name
+        self.display.display_name = name
         return self
 
     def display_color(self, color):
-        self._display.color = color
+        self.display.color = color
         return self
 
     def lore(self, *args):
@@ -126,7 +126,7 @@ class Item(Resource):
             if not one.startswith('{'):
                 one = json.dumps({"text": one})
             lores.append(one)
-        self._display.lore.extend(lores)
+        self.display.lore.extend(lores)
         return self
 
     def unbreakable(self, unbreakable=True):

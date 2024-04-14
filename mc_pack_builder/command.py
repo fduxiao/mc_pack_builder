@@ -95,22 +95,40 @@ class Target:
         self(distance=distance)
         return self
 
+    def sort(self, s):
+        self(sort=s)
+        return self
+
     def limit(self, n):
         self(limit=n)
+        return self
+
+    def type(self, target_type):
+        self(type=target_type)
         return self
 
     def nbt(self, **kwargs):
         self._nbt.update(kwargs)
         return self
 
-    def selected_item(self, item, with_count=True, custom_id=True, **kwargs):
+    @staticmethod
+    def parse_item(item, with_count=True, custom_id=True, **kwargs):
         # to avoid a loop import
         from .resources import Item
         if isinstance(item, Item):
             if custom_id:
-                item = item.custom_id()
+                custom_id = item.get('CustomID', None)
+                if custom_id is not None:
+                    item = item.custom_id()
             item = item.item_nbt(with_count, **kwargs)
-        self.nbt(SelectedItem=item)
+        return item
+
+    def selected_item(self, item, with_count=True, custom_id=True, **kwargs):
+        self.nbt(SelectedItem=self.parse_item(item, with_count, custom_id, **kwargs))
+        return self
+
+    def item(self, item, with_count=True, custom_id=True, **kwargs):
+        self.nbt(Item=self.parse_item(item, with_count, custom_id, **kwargs))
         return self
 
 
@@ -122,6 +140,10 @@ def at_s(**kwargs):
     return at('s')(**kwargs)
 
 
+def at_e(**kwargs):
+    return at('e')(**kwargs)
+
+
 give = Command('give')
 say = Command('say')
 tell = Command('tell')
@@ -129,6 +151,7 @@ tellraw = Command('tellraw')
 trigger = Command('trigger')
 summon = Command('summon')
 clear = Command('clear')
+data = Command('data')
 
 
 class ScoreBoard:
@@ -196,28 +219,32 @@ def scoreboard(objective):
 
 class Execute:
     def __init__(self):
-        self.modifications = dict()
+        self.modifications = list()
         self.condition_type = None
         self.condition_expr = None
         self.cmd_run = None
 
     def force_str(self):
-        self.modifications = {k: str(v) for k, v in self.modifications.items()}
+        self.modifications = {k: str(v) for k, v in self.modifications}
         self.condition_type = str(self.condition_type)
         self.condition_expr = str(self.condition_expr)
         self.cmd_run = str(self.cmd_run)
         return self
 
     def modify(self, **kwargs):
-        self.modifications.update(kwargs)
+        for k, v in kwargs.items():
+            self.modifications.append((k, v))
         return self
 
     def as_(self, target):
-        self.modifications['as'] = target
+        self.modifications.append(('as', target))
         return self
 
     def at(self, target):
         return self.modify(at=target)
+
+    def align(self, align='xyz'):
+        return self.modify(align=align)
 
     def condition(self, condition_type, condition):
         self.condition_type = condition_type
@@ -233,7 +260,7 @@ class Execute:
         return self
 
     def __str__(self):
-        modifications = " ".join(map(lambda k, v: f'{k} {v}', self.modifications.items()))
+        modifications = " ".join(f'{k} {v}' for k, v in self.modifications)
         cmd = 'execute'
         if modifications != "":
             cmd += " " + modifications

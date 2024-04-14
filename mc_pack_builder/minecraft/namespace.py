@@ -10,8 +10,14 @@ class CustomStat(Namespace):
         return f'{self.name}:{item}'
 
 
+class SelectorType:
+    item = "minecraft:item"
+    armor_stand = "minecraft:armor_stand"
+
+
 class Minecraft(Namespace):
     used = CustomStat('minecraft.used')
+    type = SelectorType
 
     def __init__(self):
         super().__init__("minecraft")
@@ -30,3 +36,6 @@ class Minecraft(Namespace):
 
     def paper(self):
         return self.item('paper')
+
+    def emerald(self):
+        return self.item('emerald')
