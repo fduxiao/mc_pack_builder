@@ -153,27 +153,16 @@ PosZ = magic_ns.scoreboard("PosZ")
 
 
 @magics.new()
-def armor_stand_tp():
+def tp_to_marker():
     # executed at the position of the player holding the scroll
-    # when @s is the specific armor stand and @p is the target player
+    # when @s is the marker and @p is the target player
     yield 'data modify entity @s Pos set from entity @p SelectedItem.tag.TargetPos'
     yield 'data modify entity @s Rotation set from entity @p SelectedItem.tag.TargetRotation'
-    # I am not sure which is the nearest, so I checked with chicken
-    # yield 'execute as @s run tp @e[type=minecraft:chicken,limit=1,sort=nearest] @s'
-    yield 'execute as @s run tp @p @s'
+    yield 'tp @p @s'
+    yield 'kill @s'
 
 
-@magics.new()
-def teleport_to_scroll():
-    yield 'summon armor_stand ~ ~ ~ {NoGravity:1b,Invulnerable:1b,Invisible:1b,Tags:["teleport"]}'
-    stand = at_e(tag='teleport').limit(1).sort('nearest').type(mc.type.armor_stand)
-    # execute as the armor stand
-    yield execute().at(at_s()).as_(stand).run(armor_stand_tp())
-    yield "kill @e[type=minecraft:armor_stand,tag=teleport]"
-    yield 'tell @s teleported'
-
-
-teleport_scroll.set_cmd(teleport_to_scroll())
+teleport_scroll.set_cmd(f'execute summon minecraft:marker run {tp_to_marker()}')
 
 
 magic_book.pages(
