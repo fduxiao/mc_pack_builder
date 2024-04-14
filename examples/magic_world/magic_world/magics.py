@@ -2,7 +2,8 @@ from mc_pack_builder import *
 from .pack import trigger_group, mc, carrot_stick, magic_ns
 
 
-magics = trigger_group.dir("magics")
+magics = magic_ns.functions.dir('magics')
+magics_trigger = trigger_group.dir("magics")
 
 magic_book = mc.written_book('MagicBook', 'xiao')
 magic_book.pages(
@@ -11,7 +12,7 @@ magic_book.pages(
 )
 
 
-@magics.new()
+@magics_trigger.new()
 def fireball():
     yield summon(mc.item('fireball').resource_location(), '^ ^1 ^2', '{ExplosionPower: 5}')
 
@@ -22,10 +23,18 @@ magic_book.pages(
 )
 
 
+# the next is the scroll system
+# we have to use an item modifier to remove a scroll
+
+remove1 = (magic_ns.item_modifiers.new('magics/remove1')
+           .function(mc.item_modifier_functions.set_count)
+           .count(-1).add())
+
+
 class Scroll(Item):
     scrolls: list["Scroll"] = []
 
-    def __init__(self, name: str, color='black', desc="", custom_id=None, consume=1):
+    def __init__(self, name: str, color='black', desc="", custom_id=None, consume=True):
         super().__init__('paper', 'minecraft')
         if custom_id is None:
             custom_id = name.replace(' ', '_')
@@ -49,8 +58,10 @@ class Scroll(Item):
     def execute(self):
         for cmd in self.commands:
             yield execute().if_entity(at_s().selected_item(self)).run(cmd)
-        if self.consume > 0:
-            yield execute().if_entity(at_s().selected_item(self)).run(clear('@s', self.custom_id(), self.consume))
+        if self.consume:
+            yield execute().if_entity(at_s().selected_item(self)).run(
+                f'item modify entity @s weapon.mainhand {remove1}'
+            )
 
 
 # make scroll that can be used by a carrot_stick
@@ -91,7 +102,8 @@ magic_book.pages(
 # record the coordinate and be turned into a teleport scroll.
 
 # first make a position scroll
-position_scroll = Scroll('position scroll', color="green", desc="throw it nearby and use a locator scroll", consume=0)
+position_scroll = Scroll('position scroll', color="green", desc="throw it nearby and use a locator scroll",
+                         consume=False)
 position_scroll.lore(0, 0, 0)
 position_scroll.set_cmd(
     "tell @s throw it on the ground and use a locator scroll"

@@ -4,7 +4,7 @@ to locate resources. This module contains such a class modeling a namespace. And
 resource is some id inside a namespace.
 """
 
-from .resources import enchantment, Resource, Item, Tag, Function
+from .resources import enchantment, Resource, Item, Tag, Function, ItemModifier
 
 
 class Namespace:
@@ -28,6 +28,9 @@ class Namespace:
 
     def item(self, item_id):
         return Item(item_id, self.name)
+
+    def item_modifier(self, modifier_id):
+        return ItemModifier(modifier_id, self.name)
 
     def tag(self, tag_id):
         return Tag(tag_id, self.name)

@@ -3,7 +3,7 @@ In minecraft, any resources like blocks/items/entities are described through a n
 Besides, if we want to `select` a resource, we sometimes want to also specify the nbt data,
 e.g., minecraft:stone{CustomData: 123}. This module intends to provide a selector builder.
 """
-from mc_pack_builder.natural_model import DictModel
+from ..natural_model import DictModel, NaturalModel
 
 
 class Resource(DictModel):
@@ -32,3 +32,17 @@ class Resource(DictModel):
     def set_data(self, key, value):
         self.dict[key] = value
         return self
+
+
+class ResourceList(Resource):
+    def __init__(self, resource_id="", namespace="minecraft"):
+        super().__init__()
+        self.resource_id = resource_id
+        self.namespace = namespace
+        self.data: list[NaturalModel] = []
+
+    def dump(self):
+        return [one.dump() for one in self.data]
+
+    def append(self, one):
+        self.data.append(one)

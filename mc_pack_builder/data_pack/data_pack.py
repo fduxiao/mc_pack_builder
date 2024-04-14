@@ -7,6 +7,7 @@ from ..resources import Resource
 from .tags import Tags
 from .recipes import Recipes
 from .functions import Functions
+from .item_modifiers import ItemModifiers
 
 
 class DatapackNamespace(Dir):
@@ -42,6 +43,10 @@ class DatapackNamespace(Dir):
             "on_load": self.on_load,
             "on_tick": self.on_tick,
         }))
+
+    @property
+    def item_modifiers(self):
+        return self.ensure_node("item_modifiers", lambda: ItemModifiers(self.namespace.name))
 
     def on_load(self, *cmds):
         if self._on_load is None:

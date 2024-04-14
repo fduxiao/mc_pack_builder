@@ -1,5 +1,6 @@
 from mc_pack_builder.namespace import Namespace, Item
 from .enchantments import Enchantment
+from .item_modifiers import ItemModifierFunctions
 from . import items
 
 
@@ -23,6 +24,7 @@ class Minecraft(Namespace):
         super().__init__("minecraft")
 
     enchantments = Enchantment()
+    item_modifier_functions = ItemModifierFunctions()
 
     def written_book(self, title, author, pages=None):
         book = items.Book("written_book", self.name)

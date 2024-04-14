@@ -54,3 +54,6 @@ class Namespaced(Dir):
 
     def function(self, path):
         return self.namespace.function(self.get_id(path))
+
+    def item_modifier(self, path):
+        return self.namespace.item_modifier(self.get_id(path))
