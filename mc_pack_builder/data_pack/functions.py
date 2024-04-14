@@ -1,10 +1,12 @@
 from functools import partial
-from pathlib import Path
-from typing import IO, Callable, TypeVar
+from typing import IO, Callable
 
 from .. import FileSystem
-from ..pack import Dir, Leaf
+from ..pack import Leaf
 from ..resources import Function
+
+
+from . namespaced import Namespaced, Path
 
 
 class FunctionLeaf(Leaf):
@@ -16,26 +18,7 @@ class FunctionLeaf(Leaf):
             file.write(f'{i}\n')
 
 
-T = TypeVar('T')
-
-
-class Functions(Dir):
-    def __init__(self, namespace="", prefix: Path | str = "", data=None, nodes=None):
-        super().__init__(nodes)
-        self.namespace = namespace
-        self.prefix = Path(prefix)
-
-        if data is None:
-            data = {}
-        self.data = data
-
-    def get(self, key, default=None):
-        return self.data.get(key, default)
-
-    def set(self, key, value):
-        self.data[key] = value
-        return self
-
+class Functions(Namespaced):
     def on_load(self, *cmds):
         on_load = self.get('on_load')
         if on_load is not None:
@@ -46,24 +29,6 @@ class Functions(Dir):
         on_tick = self.get('on_tick')
         if on_tick is not None:
             on_tick(*cmds)
-
-    def set_default(self, key, default):
-        return self.data.setdefault(key, default)
-
-    def dir(self, path: str | Path) -> "Functions":
-        node = self.ensure_node(path, lambda: type(self)(self.namespace, self.prefix / path, self.data))
-        if not isinstance(node, type(self)):
-            node = type(self)(self.namespace, self.prefix / path, self.data, node.nodes)
-        return node
-
-    def fork(self, fork_type: Callable[[...], T] = None, copy=True) -> T:
-        if fork_type is None:
-            fork_type = type(self)
-        data = self.data
-        if copy:
-            data = data.copy()
-        functions = fork_type(self.namespace, self.prefix, data, self.nodes)
-        return functions
 
     def post_new(self, func):
         return func
@@ -81,10 +46,7 @@ class Functions(Dir):
         """
 
         def make_func():
-            func = Function(
-                resource_id=f'{self.prefix / path}',
-                namespace=self.namespace,
-            )
+            func = self.function(path)
 
             if body is not None:
                 func.body(body)

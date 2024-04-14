@@ -14,6 +14,8 @@ class Namespace:
 
     def __init__(self, name):
         self.name = name
+        if isinstance(name, Namespace):
+            self.name = name.name
 
     def __call__(self, resource_id):
         return f'{self.name}:{resource_id}'

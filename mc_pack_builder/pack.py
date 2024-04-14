@@ -17,7 +17,7 @@ import json
 from contextlib import contextmanager
 import io
 from pathlib import Path
-from typing import IO, Callable, TypeVar
+from typing import IO, Callable, TypeVar, Self
 from .natural_model import NaturalModel, DictModel
 
 
@@ -226,7 +226,7 @@ class Dir(Branch):
     def __init__(self, nodes: dict[Path, FSTree] = None):
         super().__init__(nodes)
 
-    def dir(self, path: str | Path) -> "Dir":
+    def dir(self, path: str | Path) -> Self:
         return self.ensure_node(path, Dir)
 
     def text(self, path: str | Path) -> Text:
