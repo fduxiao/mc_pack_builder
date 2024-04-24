@@ -1,5 +1,5 @@
 from mc_pack_builder import *
-from .pack import data_pack, magic_ns
+from .pack import magic_ns
 
 
 some_property = scoreboard("some_property")

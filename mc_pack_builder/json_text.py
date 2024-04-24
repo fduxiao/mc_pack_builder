@@ -4,8 +4,8 @@ a hyperlink to some URL, invoke a command, etc. To describe such
 a string, Minecraft uses a json text. This module provides a class
 for that purpose.
 """
-from nbtlib.tag import String
 import json
+from nbtlib.tag import String
 
 
 class TextBase:
@@ -13,15 +13,25 @@ class TextBase:
     The base class with some common methods
     """
     def dump(self):
-        pass
+        """dump to the json object used in minecraft"""
+        return {"text": ""}
 
     def as_list(self) -> list:
-        pass
+        """
+        Minecraft accepts a list of json objects. If you want to
+        concatenate two text with different formats or hyperlinks,
+        you have to use a list of json texts. Thus, we'd better
+        provide some mechanism to turn a text into a list. Then,
+        we can easily add multiple json text.
+        """
+        return []
 
-    def json(self, indent=None, ensure_ascii=False):
+    def json(self, indent=None, ensure_ascii=False) -> str:
+        """to json string"""
         return json.dumps(self.dump(), ensure_ascii=ensure_ascii, indent=indent)
 
     def to_nbt_string(self):
+        """to nbt string"""
         return String(self.json())
 
     def __str__(self):
@@ -56,22 +66,27 @@ class Text(TextBase):
         return [self]
 
     def color(self, color):
+        """set color"""
         self.data["color"] = color
         return self
 
     def bold(self, bold=True):
+        """set bold"""
         self.data["bold"] = bold
         return self
 
     def italic(self, italic=True):
+        """set italic"""
         self.data["italic"] = italic
         return self
 
     def insertion(self, text):
+        """insertion"""
         self.data["insertion"] = text
         return self
 
     def click_event(self, action, value):
+        """click_event"""
         self.data["clickEvent"] = {
             "action": action,
             "value": str(value),
@@ -79,18 +94,22 @@ class Text(TextBase):
         return self
 
     def run_command(self, cmd):
+        """run_command"""
         cmd = str(cmd)
         if not cmd.startswith('/'):
             cmd = '/' + cmd
         return self.click_event("run_command", cmd)
 
     def suggest_command(self, cmd):
+        """suggest_command"""
         return self.click_event("suggest_command", cmd)
 
     def change_page(self, page):
+        """change_page"""
         return self.click_event("change_page", page)
 
     def hover_event(self, action, context):
+        """hover_event"""
         self.data["hoverEvent"] = {
             "action": action,
             "context": context
@@ -98,10 +117,14 @@ class Text(TextBase):
         return self
 
     def hover_text(self, text):
+        """hover_text"""
         return self.hover_event("show_text", text)
 
 
 class ListText(TextBase):
+    """
+    A list of json text for different formats or hyperlinks.
+    """
     def __init__(self, *texts: Text | str):
         self.texts = []
         for t in texts:

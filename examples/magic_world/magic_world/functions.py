@@ -1,5 +1,5 @@
 from mc_pack_builder import *
-from .pack import magic_ns, trigger_group
+from .pack import magic_ns
 from . import books
 
 functions = magic_ns.functions

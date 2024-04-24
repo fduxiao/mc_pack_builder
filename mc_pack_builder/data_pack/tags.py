@@ -1,6 +1,5 @@
 from enum import Enum
 from .namespaced import Namespaced
-from ..resources import Tag
 
 
 class TagType(Enum):

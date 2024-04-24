@@ -3,8 +3,7 @@ from typing import TypeVar
 
 from ..pack import Dir
 from ..natural_model import DictModel, Field
-from ..resources import Resource
-from .tags import Tag
+from ..resources import Resource, Tag
 
 
 class Category(Enum):

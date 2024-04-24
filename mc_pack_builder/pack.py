@@ -1,6 +1,6 @@
 """
-This module intends to model a pack, which should be a directory of many files containing certain data.
-A class :py:class:`mc_pack_builder.pack.Pack` is provided to organize them easily.
+This module intends to model a pack, which should be a directory of many files containing certain
+data. A class :py:class:`mc_pack_builder.pack.Pack` is provided to organize them easily.
 
 Such a directory is a tree with each leaf serializable to a file. Then for each node
 of that tree (a branch or a leaf), we design a `dump` method to serialize the data.
@@ -9,7 +9,7 @@ Though we finally want to dump everything to files, sometimes it is convenient t
 them to a :py:class:`dict` in order to do some tests. Thus, I break a pack into the following
 3 parts:
 
-1. A filesystem describer with `mkdir` method, and `open` method, together with some other info like json indent.
+1. A filesystem describer with `mkdir` method, `open` method, and some other info like json indent.
 2. A tree object that can `dump` the data into a file system.
 3. A Pack class wrapping a tree.
 """
@@ -36,7 +36,6 @@ class FileSystem:
         :param path:
         :return: the result is certainly another file system starting with path
         """
-        pass
 
     def open(self, path: Path, mode="w") -> IO:
         """
@@ -44,7 +43,6 @@ class FileSystem:
 
         :return:
         """
-        pass
 
 
 class OSFileSystem(FileSystem):
@@ -61,7 +59,7 @@ class OSFileSystem(FileSystem):
 
     def open(self, path: Path, mode="w") -> IO:
         self.mkdir(path.parent)
-        return open(self.path / path, mode)
+        return open(self.path / path, mode, encoding='utf-8')
 
 
 class DictFileSystem(FileSystem):
@@ -73,7 +71,7 @@ class DictFileSystem(FileSystem):
 
     def __init__(self, fs=None):
         if fs is None:
-            fs = dict()
+            fs = {}
         self.dict = fs
 
     def mkdir(self, path: Path) -> "DictFileSystem":
@@ -81,7 +79,7 @@ class DictFileSystem(FileSystem):
         for k in path.parts:
             sub_dir = result.get(k, None)
             if sub_dir is None:
-                sub_dir = dict()
+                sub_dir = {}
                 result[k] = sub_dir
             result = sub_dir
         return DictFileSystem(result)
@@ -102,7 +100,7 @@ class DictFileSystem(FileSystem):
         return wrapper()
 
 
-class FSTree:
+class FSTree:  # pylint: disable=R0903
     """
     The tree object allowed to dump to a :py:class:`FileSystem`
     """
@@ -113,7 +111,6 @@ class FSTree:
         :param fs: :py:class:`FileSystem` object
         :return:
         """
-        pass
 
 
 T = TypeVar("T")
@@ -126,7 +123,7 @@ class Branch(FSTree):
 
     def __init__(self, nodes: dict[Path, FSTree] = None):
         if nodes is None:
-            nodes = dict()
+            nodes = {}
         self.nodes: dict[Path, FSTree] = nodes
 
     def add_node(self, path: str | Path, node: FSTree):
@@ -185,7 +182,6 @@ class Leaf(FSTree):
         :param file: the IO object opened by :py:meth:`Leaf.dump`
         :return:
         """
-        pass
 
     def dump(self, rel_path: Path, fs: FileSystem):
         with fs.open(rel_path, self.mode) as file:
@@ -194,14 +190,20 @@ class Leaf(FSTree):
 
 
 class Text(Leaf):
+    """
+    Text file
+    """
     def __init__(self):
+        """"""
         self.text = ""
 
     def set(self, text=""):
+        """set the content of the file"""
         self.text = text
         return self
 
     def append(self, text):
+        """append some text"""
         self.text += text
         return self
 
@@ -210,6 +212,9 @@ class Text(Leaf):
 
 
 class Json(Leaf):
+    """
+    JSON file
+    """
     def __init__(self, data: NaturalModel):
         self.data = data
 
@@ -223,16 +228,16 @@ class Dir(Branch):
     a helper to gather different leaves
     """
 
-    def __init__(self, nodes: dict[Path, FSTree] = None):
-        super().__init__(nodes)
-
     def dir(self, path: str | Path) -> Self:
+        """make a new directory"""
         return self.ensure_node(path, Dir)
 
     def text(self, path: str | Path) -> Text:
+        """add a text"""
         return self.ensure_node(path, Text)
 
     def add_json(self, path: str | Path, data: T) -> T:
+        """add a json file"""
         if isinstance(data, dict):
             data = DictModel(data=data)
         self.ensure_node(path, lambda: Json(data))
